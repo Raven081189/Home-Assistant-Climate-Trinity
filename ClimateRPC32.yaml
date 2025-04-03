@@ -1,0 +1,360 @@
+esphome:
+  name: klimasteuerung
+  friendly_name: Klimasteuerung
+
+esp32:   
+  board: az-delivery-devkit-v4 
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "REPLACE"
+
+ota:
+  - platform: esphome
+    password: "REPLACE"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "REPLACE"
+    password: "REPLACE"
+
+captive_portal:
+
+remote_receiver:
+  id: rcvr  
+  pin: 
+    number: GPIO16
+    inverted: true
+  dump: all
+  tolerance: 55%
+
+remote_transmitter:
+  id: trns
+  pin: GPIO17
+  carrier_duty_percent: 50%
+
+sensor:
+  - platform: homeassistant
+    name: "Temperatur Klima"
+    id: Temp
+    entity_id: sensor.temperatursensorbuero
+
+button:
+  - platform: template
+    icon: "mdi:power"
+    name: "Aus"
+    on_press:
+      - remote_transmitter.transmit_aeha:
+          address: 0xC4D3
+          data: [0x64,0x80,0x00,0x04,0x80,0xF0,0x00,0x00,0x00,0x00,0x00,0xA2] 
+
+  - platform: template
+    icon: "mdi:heat-wave"
+    name: "Heizen"
+    on_press:
+      - remote_transmitter.transmit_aeha:
+          address: 0xC4D3
+          data: [0x64,0x80,0x00,0x24,0x80,0xA0,0x00,0x00,0x00,0x00,0x00,0xFC]
+      - number.set:
+          id: slider
+          value: 26
+
+  - platform: template
+    icon: "mdi:sun-snowflake"
+    name: "Kühlen"
+    on_press:
+      - remote_transmitter.transmit_aeha:
+          address: 0xC4D3
+          data: [0x64,0x80,0x00,0x24,0xC0,0x10,0x00,0x00,0x00,0x00,0x01,0x23]
+      - number.set:
+          id: slider
+          value: 23
+
+  - platform: template
+    icon: "mdi:water-remove-outline"
+    name: "Entfeuchten"
+    on_press:
+      - remote_transmitter.transmit_aeha:
+          address: 0xC4D3
+          data: [0x64,0x80,0x00,0x24,0x40,0x10,0x00,0x00,0x00,0x00,0x01,0xC3]
+      - number.set:
+          id: slider
+          value: 23
+
+  - platform: template
+    icon: "mdi:fan"
+    name: "Lüfterbetrieb"
+    on_press:
+      - remote_transmitter.transmit_aeha:
+          address: 0xC4D3
+          data: [0x64,0x80,0x00,0x24,0xE0,0x10,0xA0,0x00,0x00,0x00,0x01,0xB3]
+      - number.set:
+          id: slider
+          value: 26
+
+  - platform: template
+    icon: "mdi:arrow-left-right"
+    name: "Swing Horizontal"
+    on_press:
+      - remote_transmitter.transmit_aeha:
+          address: 0xC4D3
+          data: [0x64,0x80,0x00,0x24,0xE8,0x10,0xA0,0x00,0x00,0x00,0x11,0xA7]
+      
+  - platform: template
+    icon: "mdi:arrow-up-down"
+    name: "Swing Vertikal"
+    on_press:
+      - remote_transmitter.transmit_aeha:
+          address: 0xC4D3
+          data: [0x64,0x80,0x00,0x24,0xE8,0x10,0xBC,0x00,0x00,0x00,0x11,0xB8]        
+
+# Degrees
+# 16 - 16 Degrees
+# .....
+# 31 - 31 Degrees
+number:
+  - platform: template
+    icon: "mdi:temperature-celsius"
+    id: slider
+    max_value: 31
+    min_value: 16
+    step: 1
+    name: "Temperatur"  
+    optimistic: True
+    set_action: 
+      then:        
+        lambda: !lambda |-
+                if (x == 16) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0x80,0xF0,0x00,0x00,0x00,0x00,0x00,0x92};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform();                       
+                } else if (x == 17) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0x80,0x70,0x00,0x00,0x00,0x00,0x00,0x12};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform();    
+                } else if (x == 18) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0x80,0xB0,0x00,0x00,0x00,0x00,0x00,0xE2};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform(); 
+                } else if (x == 19) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0x80,0x30,0x00,0x00,0x00,0x00,0x00,0x62};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform();  
+                } else if (x == 20) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0x80,0xD0,0x00,0x00,0x00,0x00,0x00,0xA2};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform();  
+                } else if (x == 21) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0x80,0x50,0x00,0x00,0x00,0x00,0x00,0x22};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform();  
+                } else if (x == 22) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0x80,0x90,0x00,0x00,0x00,0x00,0x00,0xC2};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform(); 
+                } else if (x == 23) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0x80,0x10,0x00,0x00,0x00,0x00,0x00,0x42};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform();  
+                } else if (x == 24) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0x80,0xE0,0x00,0x00,0x00,0x00,0x00,0x82};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform(); 
+                } else if (x == 25) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0x80,0x60,0x00,0x00,0x00,0x00,0x00,0x02};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform();
+                } else if (x == 26) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0x80,0xA0,0x00,0x00,0x00,0x00,0x00,0xFC};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform();    
+                } else if (x == 27) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0x80,0x20,0x00,0x00,0x00,0x00,0x00,0x7C};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform();    
+                } else if (x == 28) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0x80,0xC0,0x00,0x00,0x00,0x00,0x00,0xBC};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform();    
+                } else if (x == 29) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0x80,0x40,0x00,0x00,0x00,0x00,0x00,0x3C};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform();    
+                } else if (x == 30) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0x80,0x80,0x00,0x00,0x00,0x00,0x00,0xDC};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform();    
+                } else if (x == 31) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0x80,0x00,0x00,0x00,0x00,0x00,0x00,0x5C};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform();    
+                }  
+# Fan-Speed
+# 1 - Low
+# 2 - Medium
+# 3 - High
+  - platform: template
+    icon: "mdi:fan-chevron-up"
+    id: slider2
+    max_value: 3
+    min_value: 1
+    step: 1
+    name: "Fan-Speed"  
+    optimistic: True
+    set_action: 
+      then:        
+        lambda: !lambda |-
+                if (x == 1) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0xE8,0x10,0x40,0x00,0x00,0x00,0x01,0x5B};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform();                       
+                } else if (x == 2) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0xE8,0x10,0xC0,0x00,0x00,0x00,0x01,0xDB};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform();                       
+                } else if (x == 3) {
+                  std::vector<uint8_t> data = {0x64,0x80,0x00,0x24,0xE8,0x10,0xA0,0x00,0x00,0x00,0x01,0xBB};
+                  remote_base::AEHAData aeha_data; 
+                  remote_base::AEHAProtocol aeha_encoder;
+                  auto call = id(trns).transmit();
+                  aeha_data.data = data;
+                  aeha_data.address = 0xC4D3;
+                  aeha_encoder.encode(call.get_data(), aeha_data);
+                  call.get_data()->set_carrier_frequency(38000);
+                  call.set_send_times(2);            
+                  call.perform();                       
+                }

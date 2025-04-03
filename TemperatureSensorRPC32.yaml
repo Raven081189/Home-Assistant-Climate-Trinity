@@ -1,0 +1,50 @@
+esphome:
+  name: temperatursensorbuero
+  friendly_name: Temperatursensor Büro
+
+esp32:   
+  board: az-delivery-devkit-v4 
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "REPLACE"
+
+ota: 
+    platform: esphome
+    password: "REPLACE"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Temperatursensor Büro"
+    password: "REPLACE"
+
+captive_portal:
+
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+  id: bus_a
+  #frequency: 200kHz
+
+sensor:
+  - platform: aht10
+    variant: aht20
+    i2c_id: bus_a
+    id: aht_20
+    address: 0x38
+    temperature:
+      id: 'aht_temp'
+      name: "Temperatur"
+    humidity:
+      id: 'aht_humid'
+      name: "Luftfeuchtigkeit"
+    update_interval: 10s
