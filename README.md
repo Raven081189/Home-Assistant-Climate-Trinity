@@ -1,4 +1,3 @@
-
 # Home-Assistant-Climate-Trinity
 
 Since there is no support for climatics from the german manufacturer Trinnity for heatpumps in Home-Assitant yet,
@@ -9,10 +8,10 @@ of the RPC32 in Home-Assistant.
 A second RPC32 is used to messure the temperature in the Room. 
 
 I Used the following Components:
-- ![Power-Supply](https://www.amazon.de/dp/B078Q2ZMPT?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1)
-- ![Microcontroller](https://www.amazon.de/dp/B07Z83MF5W?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1)
-- ![Receiver](https://www.amazon.de/dp/B089QKGRTL?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1)
-- ![Transmitter](https://www.amazon.de/dp/B07KXQZKRW?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1)
+- [Power-Supply](https://www.amazon.de/dp/B07KXQZKRW)
+- [Microcontroller](https://www.amazon.de/dp/B07Z83MF5W)
+- [Receiver](https://www.amazon.de/dp/B089QKGRTL)
+- [Transmitter](https://www.amazon.de/dp/B07KXQZKRW)
 
 ## The IR-Codes:
 ### Degrees:
