@@ -14,8 +14,11 @@ I Used the following Components:
 - [Transmitter](https://www.amazon.de/dp/B07KXQZKRW)
 
 ## Wirering:
+### Receiver
 ![Receiver](https://github.com/user-attachments/assets/54cd0424-318e-43d7-8389-e4621ce02578)
+### Transmitter
 ![Transmitter](https://github.com/user-attachments/assets/013fc2ce-e631-459d-a22b-c6035e334454)
+### RPC32
 ![RPC32](https://github.com/user-attachments/assets/9b9c318a-6f79-4edb-932c-794435e2a230)
 
 ## The IR-Codes:
